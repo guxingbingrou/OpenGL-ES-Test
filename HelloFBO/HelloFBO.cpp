@@ -6,14 +6,7 @@ HelloFBO::HelloFBO(/* args */)
 
 HelloFBO::~HelloFBO()
 {
-    if(m_rgb_data){
-        free(m_rgb_data);
-        m_rgb_data = nullptr;
-    }
-    if(m_yuv_data){
-        free(m_yuv_data);
-        m_yuv_data = nullptr;
-    }
+
 }
 
 bool HelloFBO::Init(){
@@ -67,7 +60,7 @@ bool HelloFBO::Init(){
         "   gl_Position = vPosition;              \n"
         "   vTextureCo = inCoord;                   \n"
         "}                                        \n";
-#if 0
+
     char fShaderStr[] =
         "#version 300 es                                  \n"
         "precision mediump float;                         \n"
@@ -85,92 +78,6 @@ bool HelloFBO::Init(){
         "       fragColor = vec4 ( 0.0, 1.0, 0.0, 1.0 );  \n"
         "   }                                             \n"
         "}                                                \n";
-#else
-    char fShaderStr[] =
-        "#version 300 es                                  \n"
-        "precision highp float;                           \n"
-        "precision highp int;                           \n"
-        "in vec2 vTextureCo;                           \n"
-        "uniform sampler2D uTexture;                           \n"
-        "out vec4 fragColor;                              \n"
-        "uniform int composeMode;                         \n"
-        "uniform float uWidth;                            \n"
-        "uniform float uHeight;                           \n"
-        "float cY(float x,float y){                       \n"
-        "    vec4 c=texture2D(uTexture,vec2(x,y));        \n"
-        "    return c.r*0.257+c.g*0.504+c.b*0.098+0.0625; \n"
-        "}                                                \n"
-        "vec4 cC(float x,float y,float dx,float dy){      \n"
-        "    vec4 c0=texture2D(uTexture,vec2(x,y));       \n"
-        "    vec4 c1=texture2D(uTexture,vec2(x+dx,y));    \n"
-        "    vec4 c2=texture2D(uTexture,vec2(x,y+dy));    \n"
-        "    vec4 c3=texture2D(uTexture,vec2(x+dx,y+dy)); \n"
-        "    return (c0+c1+c2+c3)/4.;                     \n"
-        "}                                                \n"  
-        "float cU(float x,float y,float dx,float dy){     \n"
-        "    vec4 c=cC(x,y,dx,dy);                        \n"
-        "    return -0.148*c.r - 0.291*c.g + 0.439*c.b+0.5000;\n"
-        "}                                                \n"
-        "                                                 \n"
-        "float cV(float x,float y,float dx,float dy){     \n"
-        "    vec4 c=cC(x,y,dx,dy);                        \n"
-        "    return 0.439*c.r - 0.368*c.g - 0.071*c.b+0.5000;\n"
-        "}                                                \n"
-        "                                                 \n"
-        "vec2 cPos(float t,float shiftx,float gy){        \n"
-        "    vec2 pos=vec2(floor(uWidth*vTextureCo.x),floor(uHeight*gy));\n"
-        "    return vec2(mod(pos.x*shiftx,uWidth),(pos.y*shiftx+floor(pos.x*shiftx/uWidth))*t);\n"
-        "}                                                \n"
-        "                                                 \n"
-        "vec4 calculateY(){                               \n"
-        "    vec2 pos=cPos(1.,4.,vTextureCo.y);           \n"
-        "    vec4 oColor=vec4(0);                         \n"
-        "    float textureYPos=pos.y/uHeight;             \n"
-        "    oColor[0]=cY(pos.x/uWidth,textureYPos);      \n"
-        "    oColor[1]=cY((pos.x+1.)/uWidth,textureYPos); \n"
-        "    oColor[2]=cY((pos.x+2.)/uWidth,textureYPos); \n"
-        "    oColor[3]=cY((pos.x+3.)/uWidth,textureYPos); \n"
-        "    return oColor;                               \n"
-        "}                                                \n"
-        "vec4 calculateU(float gy,float dx,float dy){     \n"
-        "    vec2 pos=cPos(2.,8.,vTextureCo.y-gy);        \n"
-        "    vec4 oColor=vec4(0);                         \n"
-        "    float textureYPos=pos.y/uHeight;             \n"
-        "    oColor[0]= cU(pos.x/uWidth,textureYPos,dx,dy);\n"
-        "    oColor[1]= cU((pos.x+2.)/uWidth,textureYPos,dx,dy);\n"
-        "    oColor[2]= cU((pos.x+4.)/uWidth,textureYPos,dx,dy);\n"
-        "    oColor[3]= cU((pos.x+6.)/uWidth,textureYPos,dx,dy);\n"
-        "    return oColor;\n"
-        "}\n"
-        "vec4 calculateV(float gy,float dx,float dy){     \n"
-        "    vec2 pos=cPos(2.,8.,vTextureCo.y-gy);        \n"
-        "    vec4 oColor=vec4(0);                         \n"
-        "    float textureYPos=pos.y/uHeight;             \n"
-        "    oColor[0]=cV(pos.x/uWidth,textureYPos,dx,dy);\n"
-        "    oColor[1]=cV((pos.x+2.)/uWidth,textureYPos,dx,dy);\n"
-        "    oColor[2]=cV((pos.x+4.)/uWidth,textureYPos,dx,dy);\n"
-        "    oColor[3]=cV((pos.x+6.)/uWidth,textureYPos,dx,dy);\n"
-        "    return oColor;                               \n"
-        "}                                                \n"
-        "void main()                                      \n"
-        "{                                                \n"
-        "   if(composeMode == 2){                         \n"
-        "       if(vTextureCo.y<0.2500){                  \n"
-        "           fragColor=calculateY();               \n"
-        "       }else if(vTextureCo.y<0.3125){            \n"
-        "           fragColor=calculateU(0.2500,1./uWidth,1./uHeight);\n"
-        "       }else if(vTextureCo.y<0.3750){            \n"
-        "           fragColor=calculateV(0.3125,1./uWidth,1./uHeight);\n"
-        "       }else{                                    \n"
-        "           fragColor=vec4(0,0,0,1);           \n"
-        "       }                                         \n"
-        "   } else if(composeMode == 0){                  \n"
-        "       fragColor = vec4 ( 1.0, 0.0, 0.0, 1.0 );  \n"
-        "   }else{                                        \n"
-        "       fragColor = vec4 ( 0.0, 1.0, 0.0, 1.0 );  \n"
-        "   }                                             \n"
-        "}                                                \n";
-#endif
 
     GLuint vertexShader;
     GLuint fragmentShader;
@@ -246,19 +153,9 @@ void HelloFBO::Draw(){
 
 
     glDrawArrays ( GL_TRIANGLES, 0, 3 );
-    // static int count = 0;
-    // if(!m_rgb_data )
-    //     m_rgb_data = (uint8_t*)malloc(m_width * m_height * 4);
-    // glReadPixels(0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, m_rgb_data);
-
-    // if(!m_yuv_data)
-    //     m_yuv_data = (uint8_t*)malloc(m_width * m_height * 3 /2 );
-    // RGB2YUV(m_rgb_data);
-    // static FILE* file1 = fopen("test.yuv", "wb");
-    // fwrite(m_yuv_data, m_width* m_height*3/2, 1, file1);
 
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    // glBlitFramebuffer(0, 0, m_width, m_height, 0, 0, m_width, m_height, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, m_width, m_height);
     glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer);
@@ -275,11 +172,6 @@ void HelloFBO::Draw(){
 
     glDrawElements ( GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, (const GLvoid*)kIndices);
     
-    // glReadPixels(0, 0, m_width, m_height*3/8, GL_RGBA, GL_UNSIGNED_BYTE, m_rgb_data);
-
-    // static FILE* file2 = fopen("test2.yuv", "wb");
-    // fwrite(m_rgb_data, m_width* m_height*3/2, 1, file2);
-
 
 }
 
@@ -289,33 +181,3 @@ void HelloFBO::Shutdown(){
     glDeleteFramebuffers(1, &m_fbo);
 }
 
-void HelloFBO::RGB2YUV(uint8_t* input_buffer){
-
-    int y_size = m_width * m_height;
-    int y_index = 0;
-    int u_index = y_size;
-    int v_index = u_index + y_size / 4;
-    int R, G, B, Y, U, V;
-
-    for(int i=0; i<m_height; i++){
-        for(int j=0; j<m_width; j++){
-        	R = input_buffer[(i*m_width + j) * 4 + 0];
-        	G = input_buffer[(i*m_width + j) * 4 + 1];
-        	
-        	B = input_buffer[(i*m_width + j) * 4 + 2];
-        	Y = ((66*R + 129*G + 25*B) >> 8 ) + 16;
-        	U = ((-38*R - 74*G + 112*B) >> 8 ) + 128;
-        	V = ((112*R - 94*G - 18*B) >> 8 ) + 128;
-
-            // Y = R*0.257+G*0.504+B*0.098+0.0625;
-        	// U = -0.148*R - 0.291*G + 0.439*B+0.5000;
-        	// V = 0.439*R - 0.368*G - 0.071*B+0.5000;
-        	m_yuv_data[y_index++] = (uint8_t)(Y);
-        	if(i%2 == 0 && j%2 == 0){
-        		m_yuv_data[u_index++] = (uint8_t)(U);
-        		m_yuv_data[v_index++] = (uint8_t)(V);
-        	}
-        }
-    }
-
-}

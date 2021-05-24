@@ -9,4 +9,5 @@ include_directories(${PROJECT_SOURCE_DIR})
 set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
 add_subdirectory(HelloTriangle)
 add_subdirectory(HelloFBO)
+add_subdirectory(ConvertYUV)
 

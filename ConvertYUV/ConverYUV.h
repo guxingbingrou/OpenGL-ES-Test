@@ -1,9 +1,9 @@
-#ifndef _HELLO_FBO_H__
-#define _HELLO_FBO_H__
+#ifndef _CONVERTYUV_H__
+#define _CONVERTYUV_H__
 
 #include "GLesUtils/GlesUtil.h"
 
-class HelloFBO : public GLES_context
+class ConverYUV : public GLES_context
 {
 private:
     GLuint m_program = 0;
@@ -14,6 +14,8 @@ private:
     GLuint m_width_pos = 0;
     GLuint m_height_pos = 0;
     GLuint m_tex_pos = 0;
+    uint8_t* m_rgb_data = nullptr;
+    uint8_t* m_yuv_data = nullptr;
     struct Vertex
     {
         /* data */
@@ -22,13 +24,16 @@ private:
     };
     
 public:
-    HelloFBO(/* args */);
-    ~HelloFBO();
+    ConverYUV(/* args */);
+    ~ConverYUV();
 
     bool Init() final;
     void Draw() final;
     void Shutdown() final;
-   
+
+    void RGB2YUV(uint8_t* input);
+
+    
 
 };
 
