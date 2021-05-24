@@ -1,7 +1,7 @@
 # my OpenGL ES Test
 
 ## build&&install
-make dir build  
+mkdir build  
 cd build  
 cmake ..  
 make   
